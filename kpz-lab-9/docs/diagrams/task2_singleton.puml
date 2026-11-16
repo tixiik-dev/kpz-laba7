@@ -1,0 +1,27 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class WorldTime <<Singleton>> {
+  - {static} instance: WorldTime
+  - hour: int
+  - season: String
+  - WorldTime()
+  + {static} getInstance(): WorldTime
+  + setHour(hour: int): void
+  + isNight(): boolean
+  + getFormattedTime(): String
+  + getInstanceId(): String
+}
+
+class WeatherSubsystem <<Client>> {
+  + advanceTimeToNight(): void
+}
+
+class SpawnSubsystem <<Client>> {
+  + updateMonsterSpawns(): void
+}
+
+WorldTime --> WorldTime : -instance (1)
+WeatherSubsystem ..> WorldTime : отримує getInstance()
+SpawnSubsystem ..> WorldTime : отримує getInstance()
+@enduml

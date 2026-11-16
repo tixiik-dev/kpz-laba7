@@ -1,0 +1,44 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+interface MonsterPrototype <<Prototype>> {
+  + cloneMonster(): Monster
+}
+
+class Monster <<ConcretePrototype>> {
+  - species: String
+  - level: int
+  - health: int
+  - equipment: Equipment
+  - skills: List<String>
+  - lootTable: List<String>
+  + Monster(species: String, level: int, health: int, equipment: Equipment, skills: List<String>, lootTable: List<String>)
+  - Monster(prototype: Monster)
+  + cloneMonster(): Monster
+  + promoteToLeader(newWeapon: String, newLevel: int, bonusSkill: String): void
+}
+
+class Equipment <<DomainEntity>> {
+  - weapon: String
+  - armor: String
+  + Equipment(weapon: String, armor: String)
+  + Equipment(other: Equipment)
+  + getWeapon(): String
+  + setWeapon(weapon: String): void
+  + getArmor(): String
+  + setArmor(armor: String): void
+}
+
+class Location <<Client>> {
+  - name: String
+  - monsters: List<Monster>
+  + Location(name: String)
+  + spawnFromPrototype(prototype: Monster, count: int): void
+  + getMonsters(): List<Monster>
+}
+
+MonsterPrototype <|.. Monster
+Monster "1" *-- "1" Equipment : містить (deep copy)
+Location "1" o-- "0..*" Monster : спавнить
+Location ..> MonsterPrototype : використовує
+@enduml
