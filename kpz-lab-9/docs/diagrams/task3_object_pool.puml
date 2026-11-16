@@ -1,0 +1,59 @@
+@startuml
+title Завдання 3: Розподіл арен для матчів (Object Pool)
+
+skinparam classAttributeIconSize 0
+
+class Arena <<Reusable>> {
+  - id : String
+  - currentMatch : String
+  - teamAScore : int
+  - teamBScore : int
+  - timerSeconds : int
+  - activeItems : List<String>
+  - matchesHosted : int
+  + Arena(id : String)
+  + startMatch(matchTitle : String) : void
+  + simulateGameplay(scoreA : int, scoreB : int) : void
+  + resetState() : void
+  + getId() : String
+  + getCurrentMatch() : String
+  + getScore() : String
+  + getMatchesHosted() : int
+}
+
+class MatchRequest <<ClientRequest>> {
+  - teamA : String
+  - teamB : String
+  + MatchRequest(teamA : String, teamB : String)
+  + getMatchTitle() : String
+}
+
+class ArenaPool <<ObjectPool>> {
+  - maxArenas : int
+  - allArenas : List<Arena>
+  - availableArenas : Queue<Arena>
+  - waitingQueue : Queue<MatchRequest>
+  + ArenaPool(maxArenas : int)
+  + requestMatch(request : MatchRequest) : Arena
+  - acquireArena() : Arena
+  + releaseArena(arena : Arena) : Arena
+  + printStatistics() : void
+}
+
+class Main <<Client>> {
+  + {static} runTask3ObjectPoolDemo() : void
+}
+
+ArenaPool "1" *-- "0..3" Arena : allArenas
+ArenaPool "1" o-- "0..3" Arena : availableArenas
+ArenaPool "1" o-- "0..*" MatchRequest : waitingQueue
+Main ..> ArenaPool : використовує
+Main ..> Arena : керує матчем
+Main ..> MatchRequest : створює
+
+note right of ArenaPool
+  Контролює ліміт створених арен (maxArenas = 3),
+  очищає стан перед повторною видачею
+  та керує FIFO-чергою матчмейкінгу.
+end note
+@enduml
