@@ -1,0 +1,84 @@
+@startuml task1_facade
+title Завдання 1. Вхід гравця у світ — Facade
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+left to right direction
+
+class LoginHandler <<Client>> {
+  - facade : WorldLoginFacade
+  + handleLogin(playerName : String, token : String) : LoginResult
+}
+
+class ReconnectHandler <<Client>> {
+  - facade : WorldLoginFacade
+  + handleReconnect(playerName : String, token : String) : LoginResult
+}
+
+class WorldLoginFacade <<Facade>> {
+  - authentication : AuthenticationService
+  - characterLoader : CharacterLoader
+  - inventory : InventoryService
+  - serverSelector : LocationServerSelector
+  - chat : ChatService
+  - dailyBonus : DailyBonusService
+  + enterWorld(playerName : String, token : String) : LoginResult
+}
+
+class AuthenticationService <<Subsystem>> {
+  + authenticate(playerName : String, token : String) : String
+}
+class CharacterLoader <<Subsystem>> {
+  + loadCharacter(playerName : String) : PlayerCharacter
+}
+class InventoryService <<Subsystem>> {
+  + loadInventory(playerName : String) : List<String>
+  + reloadInventory(playerName : String) : List<String>
+}
+class LocationServerSelector <<Subsystem>> {
+  + selectServer(character : PlayerCharacter) : String
+}
+class ChatService <<Subsystem>> {
+  + connect(playerName : String, serverId : String) : void
+}
+class DailyBonusService <<Subsystem>> {
+  - grantedToday : Set<String>
+  + grantDailyBonus(playerName : String) : int
+}
+
+class LoginResult <<record>> {
+  + playerName : String
+  + sessionId : String
+  + serverId : String
+  + itemsCount : int
+  + bonus : int
+}
+class PlayerCharacter <<record>> {
+  + name : String
+  + level : int
+  + location : String
+}
+
+LoginHandler     "1" --> "1" WorldLoginFacade : - facade
+ReconnectHandler "1" --> "1" WorldLoginFacade : - facade
+
+WorldLoginFacade "1" o-- "1" AuthenticationService
+WorldLoginFacade "1" o-- "1" CharacterLoader
+WorldLoginFacade "1" o-- "1" InventoryService
+WorldLoginFacade "1" o-- "1" LocationServerSelector
+WorldLoginFacade "1" o-- "1" ChatService
+WorldLoginFacade "1" o-- "1" DailyBonusService
+
+WorldLoginFacade ..> LoginResult : <<create>>
+CharacterLoader ..> PlayerCharacter : <<create>>
+LocationServerSelector ..> PlayerCharacter : <<use>>
+
+note bottom of WorldLoginFacade
+  Роль: Facade.
+  Єдине місце з послідовністю входу.
+  Підсистеми лишаються доступними окремо
+  (напр. InventoryService.reloadInventory).
+end note
+note top of LoginHandler
+  Клієнти не звертаються до підсистем напряму
+end note
+@enduml

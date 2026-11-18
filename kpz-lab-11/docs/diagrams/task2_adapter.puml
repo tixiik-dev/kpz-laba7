@@ -1,0 +1,74 @@
+@startuml task2_adapter
+title Завдання 2. Сторонні платіжні платформи — Adapter
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class GameShop <<Client>> {
+  - gateway : ShopPaymentGateway
+  + GameShop(gateway : ShopPaymentGateway)
+  + buyCurrency(player : Player, amount : int, priceUah : BigDecimal) : boolean
+}
+
+interface ShopPaymentGateway <<Target>> {
+  + purchase(playerName : String, amountUah : BigDecimal, gameCurrencyAmount : int) : PurchaseResult
+}
+
+class GlobalPayAdapter <<Adapter>> {
+  - platform : GlobalPayPlatform
+  + GlobalPayAdapter(platform : GlobalPayPlatform)
+  + purchase(playerName : String, amountUah : BigDecimal, gameCurrencyAmount : int) : PurchaseResult
+  - parse(response : String) : PurchaseResult
+}
+
+class PayNovaAdapter <<Adapter>> {
+  - {static} ISO_UAH : int = 980
+  - client : PayNovaClient
+  + PayNovaAdapter(client : PayNovaClient)
+  + purchase(playerName : String, amountUah : BigDecimal, gameCurrencyAmount : int) : PurchaseResult
+}
+
+class GlobalPayPlatform <<Adaptee>> {
+  - counter : int
+  + createCharge(amountCents : long, currencyCode : String, customerRef : String) : String
+}
+
+class PayNovaClient <<Adaptee>> {
+  - counter : int
+  + executePayment(amountMinor : int, currencyIso : int, account : String) : int
+  + lastReference() : String
+}
+
+class Player {
+  - name : String
+  - gameCurrency : int
+  + getName() : String
+  + getGameCurrency() : int
+  + credit(amount : int) : void
+}
+
+class PurchaseResult <<record>> {
+  + success : boolean
+  + transactionId : String
+  + failureReason : String
+  + {static} ok(transactionId : String) : PurchaseResult
+  + {static} fail(reason : String) : PurchaseResult
+}
+
+GameShop "1" --> "1" ShopPaymentGateway : - gateway
+GameShop ..> Player : <<use>>
+GlobalPayAdapter ..|> ShopPaymentGateway
+PayNovaAdapter   ..|> ShopPaymentGateway
+GlobalPayAdapter "1" --> "1" GlobalPayPlatform : - platform
+PayNovaAdapter   "1" --> "1" PayNovaClient : - client
+ShopPaymentGateway ..> PurchaseResult : <<create>>
+
+note bottom of GlobalPayAdapter
+  Роль: Adapter (object adapter, композиція).
+  Єдине місце, де гривні -> центи/ISO-код
+  і розбір відповіді платформи.
+end note
+note bottom of GlobalPayPlatform
+  Роль: Adaptee. Сторонній код,
+  змінювати не можна.
+end note
+@enduml
